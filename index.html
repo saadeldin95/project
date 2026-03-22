@@ -38,10 +38,49 @@
             </svg>
         </div>
 
+        <!-- Manual time inputs -->
+        <div class="time-inputs">
+            <div class="time-input-wrapper">
+                <label for="time-start">من</label>
+                <input type="time" id="time-start" value="00:00" />
+            </div>
+            <div class="time-input-wrapper">
+                <label for="time-end">إلى</label>
+                <input type="time" id="time-end" value="06:00" />
+            </div>
+        </div>
+
+        <!-- Remaining time counter -->
+        <div class="remaining-time">
+            <div class="remaining-header">
+                <span class="remaining-label">الوقت المتبقي من 24 ساعة</span>
+                <span class="remaining-value" id="remaining-value">24 ساعة</span>
+            </div>
+            <div class="remaining-bar-bg">
+                <div class="remaining-bar-fill" id="remaining-bar-fill"></div>
+            </div>
+        </div>
+
         <div class="controls">
             <div class="input-group">
                 <input type="text" id="task-name" placeholder="اسم المهمة (مثل: نوم، دراسة، أكل)" />
                 <button id="add-task-btn">إضافة مهمة</button>
+            </div>
+
+            <!-- Color picker section -->
+            <div class="color-picker-section">
+                <div class="color-mode-toggle">
+                    <button class="color-mode-btn active" data-mode="auto">تلقائي</button>
+                    <button class="color-mode-btn" data-mode="preset">ألوان جاهزة</button>
+                    <button class="color-mode-btn" data-mode="custom">لون مخصص</button>
+                </div>
+                <div class="color-presets" id="color-presets" style="display:none;">
+                    <!-- Will be populated by JS -->
+                </div>
+                <div class="color-custom" id="color-custom" style="display:none;">
+                    <input type="color" id="custom-color-input" value="#5E5CE6" />
+                    <span class="custom-color-label">اختر لون من دائرة الألوان</span>
+                </div>
             </div>
         </div>
 

@@ -19,12 +19,20 @@
         '#AC8E68', // tan
     ];
 
+    const PRESET_COLORS = [
+        '#5E5CE6', '#FF9F0A', '#30D158', '#FF375F',
+        '#64D2FF', '#FFD60A', '#BF5AF2', '#AC8E68',
+        '#FF6482', '#00C7BE', '#5AC8FA', '#FF2D55',
+    ];
+
     // ===== State =====
     let startAngle = 270; // 12:00 AM (top of circle)
     let endAngle = 0;     // 6:00 AM
     let dragging = null;  // 'start' | 'end' | null
     let tasks = [];
     let colorIndex = 0;
+    let colorMode = 'auto'; // 'auto' | 'preset' | 'custom'
+    let selectedPresetColor = PRESET_COLORS[0];
 
     // ===== DOM Elements =====
     const svg = document.getElementById('clock-svg');
@@ -39,6 +47,13 @@
     const taskNameInput = document.getElementById('task-name');
     const addTaskBtn = document.getElementById('add-task-btn');
     const tasksContainer = document.getElementById('tasks-container');
+    const timeInputStart = document.getElementById('time-start');
+    const timeInputEnd = document.getElementById('time-end');
+    const remainingValue = document.getElementById('remaining-value');
+    const remainingBarFill = document.getElementById('remaining-bar-fill');
+    const colorPresetsContainer = document.getElementById('color-presets');
+    const colorCustomContainer = document.getElementById('color-custom');
+    const customColorInput = document.getElementById('custom-color-input');
 
     // ===== Utility Functions =====
 
@@ -209,6 +224,10 @@
         timeDisplayStart.textContent = formatTime(startTime.hours, startTime.minutes);
         timeDisplayEnd.textContent = formatTime(endTime.hours, endTime.minutes);
         durationDisplay.textContent = formatDuration(duration);
+
+        // Sync time inputs
+        timeInputStart.value = String(startTime.hours).padStart(2, '0') + ':' + String(startTime.minutes).padStart(2, '0');
+        timeInputEnd.value = String(endTime.hours).padStart(2, '0') + ':' + String(endTime.minutes).padStart(2, '0');
     }
 
     function updateAll() {
@@ -388,8 +407,7 @@
             return;
         }
 
-        const color = TASK_COLORS[colorIndex % TASK_COLORS.length];
-        colorIndex++;
+        const color = getTaskColor();
 
         tasks.push({
             name,
@@ -402,12 +420,14 @@
         removeWarning();
         renderTaskArcs();
         renderTaskList();
+        updateRemainingTime();
     }
 
     function deleteTask(index) {
         tasks.splice(index, 1);
         renderTaskArcs();
         renderTaskList();
+        updateRemainingTime();
     }
 
     function showWarning(msg) {
@@ -425,12 +445,110 @@
         if (existing) existing.remove();
     }
 
+    // ===== Remaining Time =====
+
+    function updateRemainingTime() {
+        let usedMinutes = 0;
+        tasks.forEach(function (task) {
+            const dur = calculateDuration(task.startAngle, task.endAngle);
+            usedMinutes += dur.hours * 60 + dur.minutes;
+        });
+        const totalMinutes = 24 * 60;
+        const remainMinutes = Math.max(0, totalMinutes - usedMinutes);
+        const rHours = Math.floor(remainMinutes / 60);
+        const rMins = remainMinutes % 60;
+
+        let text = '';
+        if (rHours > 0) text += rHours + ' ساعة';
+        if (rMins > 0) text += (text ? ' و ' : '') + rMins + ' دقيقة';
+        if (!text) text = '0 دقيقة';
+
+        remainingValue.textContent = text;
+
+        const pct = (remainMinutes / totalMinutes) * 100;
+        remainingBarFill.style.width = pct + '%';
+
+        // Color coding
+        remainingValue.classList.remove('warning', 'critical');
+        remainingBarFill.classList.remove('warning', 'critical');
+        if (pct <= 15) {
+            remainingValue.classList.add('critical');
+            remainingBarFill.classList.add('critical');
+        } else if (pct <= 40) {
+            remainingValue.classList.add('warning');
+            remainingBarFill.classList.add('warning');
+        }
+    }
+
+    // ===== Color Picker =====
+
+    function initColorPicker() {
+        // Populate preset colors
+        PRESET_COLORS.forEach(function (color) {
+            const dot = document.createElement('div');
+            dot.className = 'color-preset-dot';
+            dot.style.background = color;
+            if (color === selectedPresetColor) dot.classList.add('selected');
+            dot.addEventListener('click', function () {
+                selectedPresetColor = color;
+                colorPresetsContainer.querySelectorAll('.color-preset-dot').forEach(function (d) {
+                    d.classList.remove('selected');
+                });
+                dot.classList.add('selected');
+            });
+            colorPresetsContainer.appendChild(dot);
+        });
+
+        // Mode toggle
+        document.querySelectorAll('.color-mode-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.color-mode-btn').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                colorMode = btn.dataset.mode;
+
+                colorPresetsContainer.style.display = colorMode === 'preset' ? 'flex' : 'none';
+                colorCustomContainer.style.display = colorMode === 'custom' ? 'flex' : 'none';
+            });
+        });
+    }
+
+    function getTaskColor() {
+        if (colorMode === 'preset') {
+            return selectedPresetColor;
+        }
+        if (colorMode === 'custom') {
+            return customColorInput.value;
+        }
+        // auto
+        var color = TASK_COLORS[colorIndex % TASK_COLORS.length];
+        colorIndex++;
+        return color;
+    }
+
     // ===== Initialize =====
 
     function init() {
         drawClock();
         updateAll();
         renderTaskList();
+        updateRemainingTime();
+        initColorPicker();
+
+        // Time input listeners
+        timeInputStart.addEventListener('change', function () {
+            var parts = timeInputStart.value.split(':');
+            var h = parseInt(parts[0], 10);
+            var m = parseInt(parts[1], 10);
+            startAngle = normalizeAngle(hoursToAngle(h, m));
+            updateAll();
+        });
+        timeInputEnd.addEventListener('change', function () {
+            var parts = timeInputEnd.value.split(':');
+            var h = parseInt(parts[0], 10);
+            var m = parseInt(parts[1], 10);
+            endAngle = normalizeAngle(hoursToAngle(h, m));
+            updateAll();
+        });
 
         // Mouse events on SVG
         svg.addEventListener('mousedown', onPointerDown);
