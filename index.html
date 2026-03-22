@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدير الوقت - الساعة الدائرية</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <h1 class="app-title">مدير الوقت</h1>
+
+        <div class="clock-container">
+            <svg id="clock-svg" viewBox="0 0 400 400" width="400" height="400">
+                <!-- Background circle -->
+                <circle cx="200" cy="200" r="170" class="clock-bg" />
+
+                <!-- Inner circle (clock face) -->
+                <circle cx="200" cy="200" r="140" class="clock-face" />
+
+                <!-- Hour ticks and labels will be drawn by JS -->
+                <g id="clock-ticks"></g>
+
+                <!-- Saved task arcs -->
+                <g id="task-arcs"></g>
+
+                <!-- Active selection arc -->
+                <path id="selection-arc" class="selection-arc" />
+
+                <!-- Drag handles -->
+                <circle id="handle-start" class="drag-handle" r="14" />
+                <circle id="handle-end" class="drag-handle" r="14" />
+
+                <!-- Center time display -->
+                <text id="time-display-start" x="200" y="185" class="time-text">12:00 AM</text>
+                <text id="time-display-end" x="200" y="210" class="time-text">6:00 AM</text>
+                <text id="duration-display" x="200" y="240" class="duration-text">6 ساعات</text>
+            </svg>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <input type="text" id="task-name" placeholder="اسم المهمة (مثل: نوم، دراسة، أكل)" />
+                <button id="add-task-btn">إضافة مهمة</button>
+            </div>
+        </div>
+
+        <div class="task-list" id="task-list">
+            <h2 class="section-title">المهام</h2>
+            <div id="tasks-container"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
