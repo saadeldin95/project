@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""NotebookLM Bridge — create notebooks, add YouTube sources, generate artifacts."""
+"""NotebookLM Bridge — create notebooks, add sources (files, URLs), generate artifacts."""
 
 import argparse
 import asyncio
 import json
+import os
 import sys
 
 from notebooklm import NotebookLMClient
@@ -16,16 +17,20 @@ async def create_notebook(name: str) -> dict:
         return {"id": nb.id, "name": name, "status": "created"}
 
 
-async def add_youtube_sources(notebook_id: str, urls: list[str]) -> list[dict]:
-    """Add YouTube URLs as sources to a notebook."""
+async def add_sources(notebook_id: str, sources: list[str]) -> list[dict]:
+    """Add files or URLs as sources to a notebook."""
     added = []
     async with await NotebookLMClient.from_storage() as client:
-        for url in urls:
+        for source in sources:
             try:
-                await client.sources.add_url(notebook_id, url, wait=True)
-                added.append({"url": url, "status": "added"})
+                if os.path.isfile(source):
+                    await client.sources.add_file(notebook_id, source, wait=True)
+                    added.append({"source": source, "type": "file", "status": "added"})
+                else:
+                    await client.sources.add_url(notebook_id, source, wait=True)
+                    added.append({"source": source, "type": "url", "status": "added"})
             except Exception as e:
-                added.append({"url": url, "status": "error", "error": str(e)})
+                added.append({"source": source, "status": "error", "error": str(e)})
     return added
 
 
@@ -102,9 +107,9 @@ def main():
     c.add_argument("name", help="Notebook name")
 
     # add-sources
-    a = sub.add_parser("add-sources", help="Add YouTube URLs to a notebook")
+    a = sub.add_parser("add-sources", help="Add files or URLs to a notebook")
     a.add_argument("notebook_id", help="Notebook ID")
-    a.add_argument("urls", nargs="+", help="YouTube URLs")
+    a.add_argument("sources", nargs="+", help="File paths or URLs")
 
     # ask
     q = sub.add_parser("ask", help="Ask a question")
@@ -129,7 +134,7 @@ def main():
     if args.command == "create":
         result = asyncio.run(create_notebook(args.name))
     elif args.command == "add-sources":
-        result = asyncio.run(add_youtube_sources(args.notebook_id, args.urls))
+        result = asyncio.run(add_sources(args.notebook_id, args.sources))
     elif args.command == "ask":
         result = asyncio.run(ask_notebook(args.notebook_id, args.question))
     elif args.command == "generate":

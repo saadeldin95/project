@@ -1,12 +1,12 @@
 # notebooklm
 
-NotebookLM Integration Skill — create notebooks, add sources, generate deliverables.
+NotebookLM Integration Skill — create notebooks, add sources (files/URLs), generate deliverables.
 
 ## Trigger
 
 Activate when the user asks to:
 - Create a NotebookLM notebook
-- Send/upload videos or URLs to NotebookLM
+- Send/upload files or URLs to NotebookLM
 - Generate infographics, slide decks, flashcards, quizzes, audio, reports, mind maps, or data tables
 - Analyze content using NotebookLM
 - Use the "notebooklm" skill
@@ -29,8 +29,14 @@ Run the Python bridge script at `scripts/notebooklm_bridge.py`:
 # Create a new notebook
 python3 scripts/notebooklm_bridge.py create "My Research Notebook"
 
-# Add YouTube URLs as sources
-python3 scripts/notebooklm_bridge.py add-sources NOTEBOOK_ID "https://youtube.com/watch?v=..." "https://youtube.com/watch?v=..."
+# Add files as sources
+python3 scripts/notebooklm_bridge.py add-sources NOTEBOOK_ID "./lecture.pdf" "./notes.txt"
+
+# Add URLs as sources
+python3 scripts/notebooklm_bridge.py add-sources NOTEBOOK_ID "https://example.com/article"
+
+# Mix files and URLs
+python3 scripts/notebooklm_bridge.py add-sources NOTEBOOK_ID "./file.pdf" "https://example.com"
 
 # Ask a question against the notebook
 python3 scripts/notebooklm_bridge.py ask NOTEBOOK_ID "What are the top findings across all sources?"
@@ -40,7 +46,7 @@ python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID infographic --prompt "
 python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID slide-deck --output slides.pptx
 python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID flashcards --output cards.json
 python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID quiz
-python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID mind-map
+python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID mind-map --output mindmap.json
 python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID audio --prompt "make it engaging"
 python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID report
 python3 scripts/notebooklm_bridge.py generate NOTEBOOK_ID data-table
@@ -61,10 +67,10 @@ python3 scripts/notebooklm_bridge.py list
 | `report` | Written report / briefing document |
 | `data-table` | Structured data table (CSV export) |
 
-## Typical Pipeline Workflow
+## Typical Workflow
 
-1. Use `yt-research` skill to gather YouTube URLs
-2. Create a notebook: `create "Topic Research"`
-3. Add all YouTube URLs as sources: `add-sources NOTEBOOK_ID url1 url2 ...`
-4. Ask for analysis: `ask NOTEBOOK_ID "Summarize the top findings"`
-5. Generate deliverables: `generate NOTEBOOK_ID infographic --prompt "style instructions"`
+1. Collect study materials (PDFs, notes, URLs)
+2. Create a notebook: `create "Subject Study"`
+3. Add all sources: `add-sources NOTEBOOK_ID file1.pdf file2.pdf url1`
+4. Ask for analysis: `ask NOTEBOOK_ID "Summarize the key concepts"`
+5. Generate deliverables: `generate NOTEBOOK_ID mind-map --output mindmap.json`
